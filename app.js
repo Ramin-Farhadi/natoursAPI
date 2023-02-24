@@ -60,6 +60,39 @@ app.post('/api/v1/tours', (req, res) => {
   );
 });
 
+app.patch('/api/v1/tours/:id', (req, res) => {
+  console.log(req.body);
+  const id = req.params.id * 1;
+  const targetTour = tours.find((el) => el.id === id);
+
+  if (!targetTour) {
+    res.status(404).json({
+      status: 'failed',
+      message: 'Id does not exist',
+    });
+  } else {
+    const patchedTour = req.body;
+    // console.log(Object.keys(patchedTour));
+    Object.keys(patchedTour).forEach((item) => {
+      targetTour[item] = patchedTour[item];
+    });
+
+    // console.log(targetTour);
+    fs.writeFile(
+      `${__dirname}/dev-data/data/tours-simple.json`,
+      JSON.stringify(tours),
+      (err) => {
+        res.status(200).json({
+          status: 'Patch was successful',
+          data: {
+            tour: targetTour,
+          },
+        });
+      }
+    );
+  }
+});
+
 const port = 3000;
 app.listen(port, () => {
   console.log(`app running on port ${port}...`);
