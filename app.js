@@ -9,17 +9,18 @@ const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
 
-app.get(`/api/v1/tours`, (req, res) => {
+const getTours = (req, res) => {
   res.status(200).json({
     status: 'success',
+    requestat: req.requestTime,
     results: tours.length,
     data: {
       tours: tours,
     },
   });
-});
+};
 
-app.get('/api/v1/tours/:id', (req, res) => {
+const getTour = (req, res) => {
   const id = req.params.id * 1;
   const myTour = tours.find((el) => el.id === id);
 
@@ -31,20 +32,19 @@ app.get('/api/v1/tours/:id', (req, res) => {
   } else {
     res.status(200).json({
       status: 'success',
+      requestTime: req.requestTime,
       data: { tour: myTour },
     });
   }
-});
+};
 
-app.post('/api/v1/tours', (req, res) => {
+const postTours = (req, res) => {
   console.log(req.body);
 
   const id = tours[tours.length - 1].id + 1;
   const newTour = Object.assign(req.body, { id });
 
-  // console.log(newTour);
   tours.push(newTour);
-  // console.log(tours);
 
   fs.writeFile(
     `${__dirname}/dev-data/data/tours-simple.json`,
@@ -58,9 +58,9 @@ app.post('/api/v1/tours', (req, res) => {
       });
     }
   );
-});
+};
 
-app.patch('/api/v1/tours/:id', (req, res) => {
+const patchTour = (req, res) => {
   console.log(req.body);
   const id = req.params.id * 1;
   const targetTour = tours.find((el) => el.id === id);
@@ -91,7 +91,20 @@ app.patch('/api/v1/tours/:id', (req, res) => {
       }
     );
   }
+};
+
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  next();
 });
+
+app.route(`/api/v1/tours`).get(getTours).post(postTours);
+app.route(`/api/v1/tours/:id`).get(getTour).patch(patchTour);
+
+// app.get(`/api/v1/tours`, getTours);
+// app.post('/api/v1/tours', postTours);
+// app.get('/api/v1/tours/:id', getTour);
+// app.patch('/api/v1/tours/:id', patchTour);
 
 const port = 3000;
 app.listen(port, () => {
